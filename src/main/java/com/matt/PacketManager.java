@@ -1,7 +1,16 @@
 package com.matt;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Paths;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.GregorianCalendar;
@@ -16,7 +25,9 @@ import javax.activation.DataSource;
 import javax.activation.FileDataSource;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -26,6 +37,7 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.matt.artifact.message.Message;
@@ -115,7 +127,7 @@ public class PacketManager {
 	@Path("{os}/{arch}/{name}/{version}")
 	@GET
 	@Produces({
-		 "multipart/mixed;type=text/xml", MediaType.APPLICATION_JSON
+	"multipart/mixed;type=text/xml", MediaType.APPLICATION_JSON
 	})
 	public Packets getPacket(@PathParam("os") String os,
 			@PathParam("arch") String arch, @PathParam("name") String name,
@@ -133,18 +145,85 @@ public class PacketManager {
 				DataSource ds = new FileDataSource(pFile);
 				pp.setData(new DataHandler(ds));
 				pp.setArch(arch);
-//				pp.setDateCreated(value);
-//				pp.setDateModified(value);
+				// pp.setDateCreated(value);
+				// pp.setDateModified(value);
 				pp.setVersion(version);
 				pp.setOs(os);
-//				pp.setUri(value);
-//				pp.setImages(value);
-				
+				// pp.setUri(value);
+				// pp.setImages(value);
+
 				p.getPacket().add(pp);
 			}
 		}
 
 		return p;
+	}
+	@Path("add")
+	@POST
+	@Consumes("multipart/mixed;type=text/xml")
+	@Produces({
+	MediaType.TEXT_XML, MediaType.APPLICATION_JSON
+	})
+	public Message addPackets(Packets pp) {
+		Message msg = null;
+
+		StringBuilder sb = new StringBuilder();
+		for (Packet p : pp.getPacket()) {
+			File f = new File(getUtils().getFSDir());
+			f = new File(f, p.getOs());
+			if (f.exists() && f.isDirectory()) {
+				f = new File(f, p.getArch());
+				if (f.exists() && f.isDirectory()) {
+					f = new File(f, p.getName());
+					if (!f.exists()) {
+						try {
+							FileUtils.forceMkdir(f);
+						} catch (IOException e) {
+							log().log(Level.ALL, e.getLocalizedMessage(), e);
+						}
+					}
+					f = new File(f, p.getVersion());
+					if (!f.exists()) {
+						try {
+							FileUtils.forceMkdir(f);
+						} catch (IOException e1) {
+							log().log(Level.ALL, e1.getLocalizedMessage(), e1);
+						}
+						f = new File(f, p.getName() + "_" + p.getVersion());
+						if (f.exists()) {
+							String fileName = f.getAbsolutePath();
+							f.delete();
+							f = new File(fileName);
+						}
+						DataHandler dh = p.getData();
+						InputStream is = null;
+						OutputStream os = null;
+						try {
+							is = dh.getInputStream();
+							byte[] bytes = IOUtils.toByteArray(is);
+							os = new FileOutputStream(f);
+							os.write(bytes);
+							bytes = null;
+							sb.append(String.format("Packet %s, version %s added successfully.", p.getName(), p.getVersion()));
+							sb.append(System.getProperty("line.separator"));
+						} catch (IOException e) {
+							log().log(Level.ALL, e.getLocalizedMessage(), e);
+							sb.append(String.format("Packet %s, version %s could not be added.", p.getName(), p.getVersion()));
+							sb.append(System.getProperty("line.separator"));
+						}
+
+						finally {
+							IOUtils.closeQuietly(is);
+							IOUtils.closeQuietly(os);
+						}
+
+					}
+				}
+			}
+		}
+		msg = getNewMessage(sb.toString(), getUtils().now());
+
+		return msg;
 	}
 	// @Path("list/{os}/{arch}/{name}")
 	// @GET
@@ -453,6 +532,25 @@ public class PacketManager {
 				}
 			}
 			return r;
+		}
+		public byte[] getMD5(File f) {
+			byte[] digest = null;
+			MessageDigest md = null;
+			try {
+				md = MessageDigest.getInstance("MD5");
+				InputStream is = null;
+				try {
+					is = Files.newInputStream(Paths.get(f.getAbsolutePath()));
+					DigestInputStream dis = new DigestInputStream(is, md);
+					/* Read stream to EOF as normal... */
+				} catch (IOException e) {
+
+				} finally {
+					IOUtils.closeQuietly(is);
+				}
+				digest = md.digest();
+			} catch (NoSuchAlgorithmException e1) {}
+			 return digest;
 		}
 	}
 }
