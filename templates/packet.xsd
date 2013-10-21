@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:xmime="http://www.w3.org/2005/05/xmlmime"
+	targetNamespace="uri://matt.b/packet/" xmlns:ns="uri://matt.b/packet/"
+	elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<element name="packet">
+		<complexType>
+			<sequence>
+				<element name="data" type="ns:dataType"
+					xmime:expectedContentTypes="application/octet-stream" maxOccurs="1"
+					minOccurs="0">
+				</element>
+				<element name="images" type="ns:imagesType" maxOccurs="1"
+					minOccurs="0">
+				</element>
+			</sequence>
+			<attribute name="name" type="string" use="required"></attribute>
+			<attribute name="arch" use="optional"></attribute>
+			<attribute name="os" use="optional"></attribute>
+			<attribute name="description" type="string" use="optional"></attribute>
+			<attribute name="uri" type="anyURI" use="optional"></attribute>
+			<attribute name="version" type="string" use="optional"></attribute>
+			<attribute name="dateCreated" type="dateTime" use="optional"></attribute>
+			<attribute name="dateModified" type="dateTime" use="optional"></attribute>
+		</complexType>
+	</element>
+
+
+
+
+	<element name="packets">
+    	<complexType>
+    		<sequence>
+    			<element ref="ns:packet" minOccurs="0" maxOccurs="unbounded"></element>
+    		</sequence>
+    	</complexType>
+    </element>
+    <complexType name="imagesType">
+    	<sequence minOccurs="0" maxOccurs="unbounded">
+    		<element name="image">
+    			<complexType>
+    				<choice>
+    					<element name="src" type="anyURI"></element>
+    					<element name="data" type="ns:dataType"
+    					  xmime:expectedContentTypes="application/octet-stream"
+    					 maxOccurs="1"
+							minOccurs="0" />
+    				</choice>
+    			</complexType>
+    		</element>
+    	</sequence>
+    </complexType>
+
+    <simpleType name="dataType">
+    	<restriction base="base64Binary" >
+    	</restriction>
+    </simpleType>
+</schema>
