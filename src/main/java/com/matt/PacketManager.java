@@ -32,6 +32,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -296,6 +297,18 @@ public class PacketManager {
 		return p;
 	}
 
+
+	@Path("logout")
+	@GET	
+//	@Produces({
+//		MediaType.TEXT_XML, MediaType.APPLICATION_JSON
+//		})
+	public Response logoutCurrentUser(){
+		Response r = Response.status(Response.Status.UNAUTHORIZED).build();
+		return r;
+	}
+	
+			
 	static class Utils {
 		static final String FS_DB_DIR = "fs_db_dir";
 		private String _fs_dir;
