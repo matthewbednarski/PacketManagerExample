@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Paths;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
@@ -31,6 +30,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -39,15 +39,19 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.cxf.jaxrs.ext.MessageContext;
 
 import com.matt.artifact.message.Message;
-import com.matt.artifact.message.Message.Data;
 import com.matt.artifact.packet.Packet;
 import com.matt.artifact.packet.Packets;
 
 @Path("packet")
 public class PacketManager {
 
+	@Context
+	private MessageContext context;
+
+	
 	private static Logger logger;
 	private static Logger log() {
 		if (logger == null) {
@@ -55,6 +59,7 @@ public class PacketManager {
 		}
 		return logger;
 	}
+	
 	private PacketManager.Utils _utils;
 	private PacketManager.Utils getUtils() {
 		if (_utils == null) {
@@ -72,6 +77,7 @@ public class PacketManager {
 		for (String s : getUtils().getOses()) {
 			Packet pp = new Packet();
 			pp.setName(s);
+			pp.setUri(getUtils().getOsesURI(s));
 			p.getPacket().add(pp);
 		}
 
@@ -87,6 +93,7 @@ public class PacketManager {
 		for (String s : getUtils().getArchs(os)) {
 			Packet pp = new Packet();
 			pp.setName(s);
+			pp.setUri(getUtils().getArchsURI(os, s));
 			p.getPacket().add(pp);
 		}
 
@@ -103,9 +110,9 @@ public class PacketManager {
 		for (String s : getUtils().getApps(os, arch)) {
 			Packet pp = new Packet();
 			pp.setName(s);
+			pp.setUri(getUtils().getAppsURI(os, arch, s));
 			p.getPacket().add(pp);
 		}
-
 		return p;
 	}
 	@Path("{os}/{arch}/{name}")
@@ -119,6 +126,7 @@ public class PacketManager {
 		for (String s : getUtils().getVersions(os, arch, name)) {
 			Packet pp = new Packet();
 			pp.setName(s);
+			pp.setUri(getUtils().getVersionURI(os, arch, name, s));
 			p.getPacket().add(pp);
 		}
 
@@ -142,6 +150,7 @@ public class PacketManager {
 				pFile = pFile.listFiles()[0];
 				Packet pp = new Packet();
 				pp.setName(name);
+				pp.setUri(getUtils().getPacketURI(os, arch, name, version, pFile.getName()));
 				DataSource ds = new FileDataSource(pFile);
 				pp.setData(new DataHandler(ds));
 				pp.setArch(arch);
@@ -149,6 +158,7 @@ public class PacketManager {
 				// pp.setDateModified(value);
 				pp.setVersion(version);
 				pp.setOs(os);
+				
 				// pp.setUri(value);
 				// pp.setImages(value);
 
@@ -425,6 +435,11 @@ public class PacketManager {
 			}
 			return r;
 		}
+		public String getOsesURI(String os) {
+			String s = String.format("/%s", os );
+			
+			return s;
+		}
 		public List<String> getArchs(String os) {
 			List<String> r = new ArrayList<String>();
 			File archDir = new File(getFSDir(), os);
@@ -436,6 +451,11 @@ public class PacketManager {
 				}
 			}
 			return r;
+		}
+		public String getArchsURI(String os, String arch) {
+			String s = String.format("/%s/%s", os, arch);
+			
+			return s;
 		}
 		public List<String> getApps(String os, String arch) {
 			List<String> r = new ArrayList<String>();
@@ -450,7 +470,11 @@ public class PacketManager {
 			}
 			return r;
 		}
-
+		public String getAppsURI(String os, String arch, String name) {
+			String s = String.format("/%s/%s/%s", os, arch, name);
+			
+			return s;
+		}
 		public List<String> getVersions(String os, String arch, String name) {
 			List<String> r = new ArrayList<String>();
 			File versionDir = new File(getFSDir(), os);
@@ -464,6 +488,16 @@ public class PacketManager {
 				}
 			}
 			return r;
+		}
+		public String getVersionURI(String os, String arch, String name, String version) {
+			String s = String.format("/%s/%s/%s/%s", os, arch, name, version);
+			
+			return s;
+		}
+		public String getPacketURI(String os, String arch, String name, String version, String packetName) {
+			String s = String.format("/%s/%s/%s/%s/%s", os, arch, name, version, packetName);
+			
+			return s;
 		}
 		public Map<String, File> getFilesOs(String os, Map<String, File> map) {
 			Map<String, File> r = new HashMap<String, File>();
@@ -536,21 +570,15 @@ public class PacketManager {
 		public byte[] getMD5(File f) {
 			byte[] digest = null;
 			MessageDigest md = null;
-			try {
+			try (InputStream is = Files.newInputStream(Paths.get(f.getAbsolutePath()))) {
 				md = MessageDigest.getInstance("MD5");
-				InputStream is = null;
-				try {
-					is = Files.newInputStream(Paths.get(f.getAbsolutePath()));
-					DigestInputStream dis = new DigestInputStream(is, md);
-					/* Read stream to EOF as normal... */
-				} catch (IOException e) {
 
-				} finally {
-					IOUtils.closeQuietly(is);
-				}
+				DigestInputStream dis = new DigestInputStream(is, md);
+				/* Read stream to EOF as normal... */
+
 				digest = md.digest();
-			} catch (NoSuchAlgorithmException e1) {}
-			 return digest;
+			} catch (NoSuchAlgorithmException | IOException e) {}
+			return digest;
 		}
 	}
 }
