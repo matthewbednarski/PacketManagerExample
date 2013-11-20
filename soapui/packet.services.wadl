@@ -1,0 +1,74 @@
+<application xmlns="http://wadl.dev.java.net/2009/02" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:prefix1="uri://matt.b/packet/"><grammars><xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="uri://matt.b/packet/" xmlns:xmime="http://www.w3.org/2005/05/xmlmime" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="uri://matt.b/packet/">
+    <xs:import namespace="http://www.w3.org/2005/05/xmlmime"/>
+    <xs:element name="message">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" name="data">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element minOccurs="0" name="text" type="xs:string"/>
+                            <xs:element minOccurs="0" name="binary" type="xs:base64Binary" xmime:expectedContentTypes="application/octet-stream"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute name="sender" type="xs:string"/>
+            <xs:attribute name="dateTime" type="xs:dateTime"/>
+            <xs:attribute name="type" type="xs:string"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="packet">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" name="data" type="xs:base64Binary" xmime:expectedContentTypes="application/octet-stream"/>
+                <xs:element minOccurs="0" name="images" type="tns:imagesType"/>
+            </xs:sequence>
+            <xs:attribute name="name" type="xs:string" use="required"/>
+            <xs:attribute name="description" type="xs:string"/>
+            <xs:attribute name="os" type="xs:string"/>
+            <xs:attribute name="arch" type="xs:string"/>
+            <xs:attribute name="uri" type="xs:anyURI"/>
+            <xs:attribute name="version" type="xs:string"/>
+            <xs:attribute name="dateCreated" type="xs:dateTime"/>
+            <xs:attribute name="dateModified" type="xs:dateTime"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="packets">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" minOccurs="0" name="packet" nillable="true">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element minOccurs="0" name="data" type="xs:base64Binary" xmime:expectedContentTypes="application/octet-stream"/>
+                            <xs:element minOccurs="0" name="images" type="tns:imagesType"/>
+                        </xs:sequence>
+                        <xs:attribute name="name" type="xs:string" use="required"/>
+                        <xs:attribute name="description" type="xs:string"/>
+                        <xs:attribute name="os" type="xs:string"/>
+                        <xs:attribute name="arch" type="xs:string"/>
+                        <xs:attribute name="uri" type="xs:anyURI"/>
+                        <xs:attribute name="version" type="xs:string"/>
+                        <xs:attribute name="dateCreated" type="xs:dateTime"/>
+                        <xs:attribute name="dateModified" type="xs:dateTime"/>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="imagesType">
+        <xs:sequence>
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="image" nillable="true">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="src" type="xs:anyURI"/>
+                        <xs:element minOccurs="0" name="data" type="xs:base64Binary" xmime:expectedContentTypes="application/octet-stream"/>
+                    </xs:sequence>
+                    <xs:attribute name="name" type="xs:string"/>
+                    <xs:attribute name="mime" type="xs:string"/>
+                    <xs:attribute name="ignore" type="xs:boolean"/>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>
+</grammars><resources base="http://localhost:8080/"><resource path="/packet"><method name="GET"><response><representation mediaType="text/xml" element="prefix1:packets"/><representation mediaType="application/json"/></response></method><resource path="/add"><method name="POST"><request><representation mediaType="text/xml" element="prefix1:packets"/></request><response><representation mediaType="text/xml" element="prefix1:message"/><representation mediaType="application/json"/></response></method></resource><resource path="/logout"><method name="GET"><response><representation mediaType="application/octet-stream"/></response></method></resource><resource path="/setup"><method name="GET"><response><representation mediaType="text/xml" element="prefix1:message"/><representation mediaType="application/json"/></response></method></resource><resource path="/{os}"><param name="os" style="template" type="xs:string"/><method name="GET"><request/><response><representation mediaType="text/xml" element="prefix1:packets"/><representation mediaType="application/json"/></response></method></resource><resource path="/{os}/{arch}"><param name="os" style="template" type="xs:string"/><param name="arch" style="template" type="xs:string"/><method name="GET"><request/><response><representation mediaType="text/xml" element="prefix1:packets"/><representation mediaType="application/json"/></response></method></resource><resource path="/{os}/{arch}/{name}"><param name="os" style="template" type="xs:string"/><param name="arch" style="template" type="xs:string"/><param name="name" style="template" type="xs:string"/><method name="GET"><request/><response><representation mediaType="text/xml" element="prefix1:packets"/><representation mediaType="application/json"/></response></method></resource><resource path="/{os}/{arch}/{name}/{version}"><param name="os" style="template" type="xs:string"/><param name="arch" style="template" type="xs:string"/><param name="name" style="template" type="xs:string"/><param name="version" style="template" type="xs:string"/><method name="GET"><request/><response><representation mediaType="multipart/related;type=text/xml"/><representation mediaType="application/json"/></response></method></resource></resource></resources></application>

@@ -41,10 +41,12 @@
     				<choice>
     					<element name="src" type="anyURI"></element>
     					<element name="data" type="ns:dataType"
-    					  xmime:expectedContentTypes="application/octet-stream"
-    					 maxOccurs="1"
-							minOccurs="0" />
+    						xmime:expectedContentTypes="application/octet-stream"
+    						maxOccurs="1" minOccurs="0" />
     				</choice>
+    				<attribute name="name" type="string"></attribute>
+    				<attribute name="mime" type="string"></attribute>
+    				<attribute name="ignore" type="boolean"></attribute>
     			</complexType>
     		</element>
     	</sequence>

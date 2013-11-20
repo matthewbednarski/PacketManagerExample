@@ -55,8 +55,6 @@ import javax.xml.datatype.XMLGregorianCalendar;
 @XmlRootElement(name = "packet")
 public class Packet {
 
-	@XmlMimeType("application/octet-stream")
-	protected DataHandler data;
 	protected ImagesType images;
 	@XmlAttribute(name = "name", required = true)
 	protected String name;
@@ -78,6 +76,10 @@ public class Packet {
 	@XmlSchemaType(name = "dateTime")
 	protected XMLGregorianCalendar dateModified;
 
+
+	@XmlMimeType("application/octet-stream")
+	//@javax.xml.bind.annotation.XmlTransient
+	protected DataHandler data;
 	/**
 	 * Gets the value of the data property.
 	 * 

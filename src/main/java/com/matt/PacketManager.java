@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.DigestInputStream;
@@ -22,8 +23,10 @@ import java.util.logging.Logger;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.activation.FileDataSource;
+import javax.activation.MimetypesFileTypeMap;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.servlet.ServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -41,18 +44,26 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.cxf.jaxrs.ext.MessageContext;
+import org.apache.cxf.jaxrs.ext.RequestHandler;
+import org.apache.cxf.transport.http.HttpServletRequestSnapshot;
+import org.eclipse.jetty.http.HttpGenerator.RequestInfo;
+import org.eclipse.jetty.server.HttpConnection;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.Request;
 
 import com.matt.artifact.message.Message;
+import com.matt.artifact.packet.ImagesType;
+import com.matt.artifact.packet.ImagesType.Image;
 import com.matt.artifact.packet.Packet;
 import com.matt.artifact.packet.Packets;
 
 @Path("packet")
 public class PacketManager {
 
+	private static final String IMAGES_DIR = "images";
 	@Context
 	private MessageContext context;
 
-	
 	private static Logger logger;
 	private static Logger log() {
 		if (logger == null) {
@@ -60,7 +71,7 @@ public class PacketManager {
 		}
 		return logger;
 	}
-	
+
 	private PacketManager.Utils _utils;
 	private PacketManager.Utils getUtils() {
 		if (_utils == null) {
@@ -74,6 +85,8 @@ public class PacketManager {
 	MediaType.TEXT_XML, MediaType.APPLICATION_JSON
 	})
 	public Packets getOSes() {
+
+
 		Packets p = new Packets();
 		for (String s : getUtils().getOses()) {
 			Packet pp = new Packet();
@@ -136,7 +149,7 @@ public class PacketManager {
 	@Path("{os}/{arch}/{name}/{version}")
 	@GET
 	@Produces({
-	"multipart/mixed;type=text/xml", MediaType.APPLICATION_JSON
+	"multipart/related;type=text/xml", MediaType.APPLICATION_JSON
 	})
 	public Packets getPacket(@PathParam("os") String os,
 			@PathParam("arch") String arch, @PathParam("name") String name,
@@ -159,9 +172,19 @@ public class PacketManager {
 				// pp.setDateModified(value);
 				pp.setVersion(version);
 				pp.setOs(os);
-				
-				// pp.setUri(value);
-				// pp.setImages(value);
+
+				pp.setImages(new ImagesType());
+				File imagesDir = new File(pFile, IMAGES_DIR);
+				if (imagesDir.exists() && imagesDir.isDirectory()) {
+					for (File imgFile : imagesDir.listFiles()) {
+						Image img = new Image();
+						img.setName(imgFile.getName());
+						String mime = Utils.getContentType(imgFile.getAbsolutePath());
+						img.setMime(mime);
+						DataSource dsImg = new FileDataSource(imgFile);
+						img.setData(new DataHandler(dsImg));
+					}
+				}
 
 				p.getPacket().add(pp);
 			}
@@ -171,11 +194,13 @@ public class PacketManager {
 	}
 	@Path("add")
 	@POST
-	@Consumes("multipart/mixed;type=text/xml")
+	@Consumes(MediaType.TEXT_XML)
+	// @Consumes("multipart/mixed;type=text/xml")
 	@Produces({
 	MediaType.TEXT_XML, MediaType.APPLICATION_JSON
 	})
 	public Message addPackets(Packets pp) {
+
 		Message msg = null;
 
 		StringBuilder sb = new StringBuilder();
@@ -193,41 +218,51 @@ public class PacketManager {
 							log().log(Level.ALL, e.getLocalizedMessage(), e);
 						}
 					}
-					f = new File(f, p.getVersion());
-					if (!f.exists()) {
+					File versionDir = new File(f, p.getVersion());
+					if (!versionDir.exists()) {
 						try {
-							FileUtils.forceMkdir(f);
+							FileUtils.forceMkdir(versionDir);
 						} catch (IOException e1) {
 							log().log(Level.ALL, e1.getLocalizedMessage(), e1);
 						}
-						f = new File(f, p.getName() + "_" + p.getVersion());
-						if (f.exists()) {
-							String fileName = f.getAbsolutePath();
-							f.delete();
-							f = new File(fileName);
+					}
+					File fdata = new File(versionDir, p.getName());
+					if (fdata.exists()) {
+						String fileName = fdata.getAbsolutePath();
+						fdata.delete();
+						fdata = new File(fileName);
+					}
+					if (getUtils().getDataAttachments(p.getData(), fdata)) {
+						sb.append(String.format("Packet %s, version %s added successfully.", p.getName(), p.getVersion()));
+						sb.append(System.getProperty("line.separator"));
+					} else {
+						sb.append(String.format("Packet %s, version %s could not be added.", p.getName(), p.getVersion()));
+						sb.append(System.getProperty("line.separator"));
+					}
+					if (p.getImages() != null) {
+						File imageDir = new File(versionDir, IMAGES_DIR);
+						if (!imageDir.exists()) {
+							try {
+								FileUtils.forceMkdir(imageDir);
+							} catch (IOException e1) {
+								log().log(Level.ALL, e1.getLocalizedMessage(), e1);
+							}
 						}
-						DataHandler dh = p.getData();
-						InputStream is = null;
-						OutputStream os = null;
-						try {
-							is = dh.getInputStream();
-							byte[] bytes = IOUtils.toByteArray(is);
-							os = new FileOutputStream(f);
-							os.write(bytes);
-							bytes = null;
-							sb.append(String.format("Packet %s, version %s added successfully.", p.getName(), p.getVersion()));
-							sb.append(System.getProperty("line.separator"));
-						} catch (IOException e) {
-							log().log(Level.ALL, e.getLocalizedMessage(), e);
-							sb.append(String.format("Packet %s, version %s could not be added.", p.getName(), p.getVersion()));
-							sb.append(System.getProperty("line.separator"));
+						for (Image img : p.getImages().getImage()) {
+							File imgFile = new File(imageDir, img.getName());
+							if (imgFile.exists()) {
+								String fileName = imgFile.getAbsolutePath();
+								imgFile.delete();
+								imgFile = new File(fileName);
+							}
+							if (getUtils().getDataAttachments(img.getData(), imgFile)) {
+								sb.append(String.format("Image %s added successfully.", img.getName()));
+								sb.append(System.getProperty("line.separator"));
+							} else {
+								sb.append(String.format("Image %s could not be added.", img.getName()));
+								sb.append(System.getProperty("line.separator"));
+							}
 						}
-
-						finally {
-							IOUtils.closeQuietly(is);
-							IOUtils.closeQuietly(os);
-						}
-
 					}
 				}
 			}
@@ -269,6 +304,7 @@ public class PacketManager {
 		Message.Data d = new Message.Data();
 		d.setText(message);
 		m.setData(d);
+
 		return m;
 	}
 	private Packets getPackets(String os, String arch, String name,
@@ -297,19 +333,22 @@ public class PacketManager {
 		return p;
 	}
 
-
 	@Path("logout")
-	@GET	
-//	@Produces({
-//		MediaType.TEXT_XML, MediaType.APPLICATION_JSON
-//		})
-	public Response logoutCurrentUser(){
+	@GET
+	// @Produces({
+	// MediaType.TEXT_XML, MediaType.APPLICATION_JSON
+	// })
+	public Response logoutCurrentUser() {
 		Response r = Response.status(Response.Status.UNAUTHORIZED).build();
 		return r;
 	}
-	
-			
+
 	static class Utils {
+		static HttpConnection _current;
+		public HttpConnection getConnection() {
+			_current = HttpConnection.getCurrentConnection();
+			return _current;
+		}
 		static final String FS_DB_DIR = "fs_db_dir";
 		private String _fs_dir;
 		public String getFSDir() {
@@ -449,8 +488,8 @@ public class PacketManager {
 			return r;
 		}
 		public String getOsesURI(String os) {
-			String s = String.format("/%s", os );
-			
+			String s = String.format("/%s", os);
+
 			return s;
 		}
 		public List<String> getArchs(String os) {
@@ -467,7 +506,7 @@ public class PacketManager {
 		}
 		public String getArchsURI(String os, String arch) {
 			String s = String.format("/%s/%s", os, arch);
-			
+
 			return s;
 		}
 		public List<String> getApps(String os, String arch) {
@@ -485,7 +524,7 @@ public class PacketManager {
 		}
 		public String getAppsURI(String os, String arch, String name) {
 			String s = String.format("/%s/%s/%s", os, arch, name);
-			
+
 			return s;
 		}
 		public List<String> getVersions(String os, String arch, String name) {
@@ -502,14 +541,16 @@ public class PacketManager {
 			}
 			return r;
 		}
-		public String getVersionURI(String os, String arch, String name, String version) {
+		public String getVersionURI(String os, String arch, String name,
+				String version) {
 			String s = String.format("/%s/%s/%s/%s", os, arch, name, version);
-			
+
 			return s;
 		}
-		public String getPacketURI(String os, String arch, String name, String version, String packetName) {
+		public String getPacketURI(String os, String arch, String name,
+				String version, String packetName) {
 			String s = String.format("/%s/%s/%s/%s/%s", os, arch, name, version, packetName);
-			
+
 			return s;
 		}
 		public Map<String, File> getFilesOs(String os, Map<String, File> map) {
@@ -592,6 +633,37 @@ public class PacketManager {
 				digest = md.digest();
 			} catch (NoSuchAlgorithmException | IOException e) {}
 			return digest;
+		}
+
+		public boolean getDataAttachments(DataHandler dh, File f) {
+			boolean r = false;
+			StringBuilder sb = new StringBuilder();
+			InputStream is = null;
+			OutputStream os = null;
+			try {
+				is = dh.getInputStream();
+				byte[] bytes = IOUtils.toByteArray(is);
+				os = new FileOutputStream(f);
+				os.write(bytes);
+				bytes = null;
+				r = true;
+			} catch (IOException e) {
+				r = false;
+				log().log(Level.ALL, e.getLocalizedMessage(), e);
+			}
+
+			finally {
+				IOUtils.closeQuietly(is);
+				IOUtils.closeQuietly(os);
+			}
+			return r;
+		}
+		public static String getContentType(String filename) {
+			String g = URLConnection.guessContentTypeFromName(filename);
+			if (g == null) {
+				g = MimetypesFileTypeMap.getDefaultFileTypeMap().getContentType(filename);
+			}
+			return g;
 		}
 	}
 }

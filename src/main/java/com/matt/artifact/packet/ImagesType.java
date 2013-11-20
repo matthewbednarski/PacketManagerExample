@@ -5,7 +5,6 @@
 // Generated on: 2013.10.20 at 01:17:29 PM CEST 
 //
 
-
 package com.matt.artifact.packet;
 
 import java.util.ArrayList;
@@ -13,15 +12,18 @@ import java.util.List;
 import javax.activation.DataHandler;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlMimeType;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 
-
 /**
- * <p>Java class for imagesType complex type.
+ * <p>
+ * Java class for imagesType complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <p>
+ * The following schema fragment specifies the expected content contained within
+ * this class.
  * 
  * <pre>
  * &lt;complexType name="imagesType">
@@ -50,122 +52,150 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "imagesType", propOrder = {
-    "image"
+	"image"
 })
 public class ImagesType {
 
-    protected List<ImagesType.Image> image;
+	protected List<ImagesType.Image> image;
 
-    /**
-     * Gets the value of the image property.
-     * 
-     * <p>
-     * This accessor method returns a reference to the live list,
-     * not a snapshot. Therefore any modification you make to the
-     * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the image property.
-     * 
-     * <p>
-     * For example, to add a new item, do as follows:
-     * <pre>
-     *    getImage().add(newItem);
-     * </pre>
-     * 
-     * 
-     * <p>
-     * Objects of the following type(s) are allowed in the list
-     * {@link ImagesType.Image }
-     * 
-     * 
-     */
-    public List<ImagesType.Image> getImage() {
-        if (image == null) {
-            image = new ArrayList<ImagesType.Image>();
-        }
-        return this.image;
-    }
+	/**
+	 * Gets the value of the image property.
+	 * 
+	 * <p>
+	 * This accessor method returns a reference to the live list, not a
+	 * snapshot. Therefore any modification you make to the returned list will
+	 * be present inside the JAXB object. This is why there is not a
+	 * <CODE>set</CODE> method for the image property.
+	 * 
+	 * <p>
+	 * For example, to add a new item, do as follows:
+	 * 
+	 * <pre>
+	 * getImage().add(newItem);
+	 * </pre>
+	 * 
+	 * 
+	 * <p>
+	 * Objects of the following type(s) are allowed in the list
+	 * {@link ImagesType.Image }
+	 * 
+	 * 
+	 */
+	public List<ImagesType.Image> getImage() {
+		if (image == null) {
+			image = new ArrayList<ImagesType.Image>();
+		}
+		return this.image;
+	}
 
+	/**
+	 * <p>
+	 * Java class for anonymous complex type.
+	 * 
+	 * <p>
+	 * The following schema fragment specifies the expected content contained
+	 * within this class.
+	 * 
+	 * <pre>
+	 * &lt;complexType>
+	 *   &lt;complexContent>
+	 *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+	 *       &lt;choice>
+	 *         &lt;element name="src" type="{http://www.w3.org/2001/XMLSchema}anyURI"/>
+	 *         &lt;element name="data" type="{uri://matt.b/packet/}dataType" minOccurs="0"/>
+	 *      &lt;/choice>
+	 *     				&lt;attribute name="name" type="string">&lt;/attribute>
+	 *     				&lt;attribute name="mime" type="string">&lt;/attribute>
+	 *     				&lt;attribute name="ignore" type="boolean">&lt;/attribute>
+	 *     &lt;/restriction>
+	 *   &lt;/complexContent>
+	 * &lt;/complexType>
+	 * </pre>
+	 * 
+	 * 
+	 */
+	@XmlAccessorType(XmlAccessType.FIELD)
+	@XmlType(name = "", propOrder = {
+	"src", "data"
+	})
+	public static class Image {
 
-    /**
-     * <p>Java class for anonymous complex type.
-     * 
-     * <p>The following schema fragment specifies the expected content contained within this class.
-     * 
-     * <pre>
-     * &lt;complexType>
-     *   &lt;complexContent>
-     *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-     *       &lt;choice>
-     *         &lt;element name="src" type="{http://www.w3.org/2001/XMLSchema}anyURI"/>
-     *         &lt;element name="data" type="{uri://matt.b/packet/}dataType" minOccurs="0"/>
-     *       &lt;/choice>
-     *     &lt;/restriction>
-     *   &lt;/complexContent>
-     * &lt;/complexType>
-     * </pre>
-     * 
-     * 
-     */
-    @XmlAccessorType(XmlAccessType.FIELD)
-    @XmlType(name = "", propOrder = {
-        "src",
-        "data"
-    })
-    public static class Image {
+		@XmlAttribute(name = "name")
+		protected String name;
+		@XmlAttribute(name = "mime")
+		protected String mime;
+		@XmlAttribute(name = "ignore")
+		protected Boolean ignore;
 
-        @XmlSchemaType(name = "anyURI")
-        protected String src;
-        @XmlMimeType("application/octet-stream")
-        protected DataHandler data;
+		@XmlSchemaType(name = "anyURI")
+		protected String src;
+		@XmlMimeType("application/octet-stream")
+		protected DataHandler data;
 
-        /**
-         * Gets the value of the src property.
-         * 
-         * @return
-         *     possible object is
-         *     {@link String }
-         *     
-         */
-        public String getSrc() {
-            return src;
-        }
+		public String getName() {
+			return this.name;
+		}
 
-        /**
-         * Sets the value of the src property.
-         * 
-         * @param value
-         *     allowed object is
-         *     {@link String }
-         *     
-         */
-        public void setSrc(String value) {
-            this.src = value;
-        }
+		public void setName(String value) {
+			this.name = value;
+		}
+		public String getMime() {
+			return this.mime;
+		}
 
-        /**
-         * Gets the value of the data property.
-         * 
-         * @return
-         *     possible object is
-         *     {@link DataHandler }
-         *     
-         */
-        public DataHandler getData() {
-            return data;
-        }
+		public void setMime(String value) {
+			this.mime = value;
+		}
+		public Boolean getIgnore() {
+			return this.ignore;
+		}
 
-        /**
-         * Sets the value of the data property.
-         * 
-         * @param value
-         *     allowed object is
-         *     {@link DataHandler }
-         *     
-         */
-        public void setData(DataHandler value) {
-            this.data = value;
-        }
+		public void setIgnore(Boolean value) {
+			this.ignore = value;
+		}
 
-    }
+		/**
+		 * Gets the value of the src property.
+		 * 
+		 * @return possible object is {@link String }
+		 * 
+		 */
+		public String getSrc() {
+			return src;
+		}
+
+		/**
+		 * Sets the value of the src property.
+		 * 
+		 * @param value
+		 *            allowed object is {@link String }
+		 * 
+		 */
+		public void setSrc(String value) {
+			this.src = value;
+		}
+
+		/**
+		 * Gets the value of the data property.
+		 * 
+		 * @return possible object is {@link DataHandler }
+		 * 
+		 */
+		public DataHandler getData() {
+			return data;
+		}
+
+		/**
+		 * Sets the value of the data property.
+		 * 
+		 * @param value
+		 *            allowed object is {@link DataHandler }
+		 * 
+		 */
+		public void setData(DataHandler value) {
+			this.data = value;
+		}
+
+	}
 
 }
