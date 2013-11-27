@@ -22,37 +22,37 @@
 		<servlet-name>CXFServlet</servlet-name>
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
-<!-- 	<security-constraint> -->
-<!-- 		<display-name>login</display-name> -->
-<!-- 		<web-resource-collection> -->
-<!-- 			<web-resource-name>packet</web-resource-name> -->
-<!-- 			<url-pattern>/*</url-pattern> -->
-<!-- 		</web-resource-collection> -->
-<!-- 		<auth-constraint> -->
-<!-- 			<role-name>user</role-name> -->
-<!-- 		</auth-constraint> -->
-<!-- 	</security-constraint> -->
-<!-- 	<security-constraint> -->
-<!-- 		<display-name>admin</display-name> -->
-<!-- 		<web-resource-collection> -->
-<!-- 			<web-resource-name>packet-setup</web-resource-name> -->
-<!-- 			<url-pattern>/packet/setup</url-pattern> -->
-<!-- 		</web-resource-collection> -->
-<!-- 		<web-resource-collection> -->
-<!-- 			<web-resource-name>packet-add</web-resource-name> -->
-<!-- 			<url-pattern>/packet/add</url-pattern> -->
-<!-- 		</web-resource-collection> -->
-<!-- 		<auth-constraint> -->
-<!-- 			<role-name>admin</role-name> -->
-<!-- 		</auth-constraint> -->
-<!-- 	</security-constraint> -->
-<!-- 	<login-config> -->
-<!-- 		<auth-method>DIGEST</auth-method> -->
-<!-- 		<realm-name>HashLoginRealm</realm-name> -->
-<!-- 	</login-config> -->
-<!-- 	<security-role> -->
-<!-- 		<role-name>user</role-name> -->
-<!-- 	</security-role> -->
+	<security-constraint>
+		<display-name>login</display-name>
+		<web-resource-collection>
+			<web-resource-name>packet</web-resource-name>
+			<url-pattern>/*</url-pattern>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>user</role-name>
+		</auth-constraint>
+	</security-constraint>
+	<security-constraint>
+		<display-name>admin</display-name>
+		<web-resource-collection>
+			<web-resource-name>packet-setup</web-resource-name>
+			<url-pattern>/packet/setup</url-pattern>
+		</web-resource-collection>
+		<web-resource-collection>
+			<web-resource-name>packet-add</web-resource-name>
+			<url-pattern>/packet/add</url-pattern>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>admin</role-name>
+		</auth-constraint>
+	</security-constraint>
+	<login-config>
+		<auth-method>DIGEST</auth-method>
+		<realm-name>HashLoginRealm</realm-name>
+	</login-config>
+	<security-role>
+		<role-name>user</role-name>
+	</security-role>
 	<security-role>
 		<role-name>guest</role-name>
 	</security-role>

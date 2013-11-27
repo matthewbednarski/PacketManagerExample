@@ -63,7 +63,7 @@
 	<build>
 		<pluginManagement>
 			<plugins>
-			 	<plugin>
+				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
 					<configuration>
@@ -123,13 +123,26 @@
 				<artifactId>jetty-maven-plugin</artifactId>
 				<version>9.0.6.v20130930</version>
 				<configuration>
+					<systemProperties>
+						<force>true</force>
+						<systemProperty>
+							<name>ddd</name>
+							<value>222</value>
+						</systemProperty>
+					</systemProperties>
+					<connectors>
+						<connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
+							<port>8081</port>
+							<maxIdleTime>60000</maxIdleTime>
+						</connector>
+					</connectors>
 					<!-- <webAppXml>src/test/resources/jetty-test.xml</webAppXml> -->
-<!-- 					<loginServices> -->
-<!-- 						<loginService implementation="org.eclipse.jetty.security.HashLoginService"> -->
-<!-- 							<name>HashLoginRealm</name> -->
-<!-- 							<config>${basedir}/src/etc/login-realm.properties</config> -->
-<!-- 						</loginService> -->
-<!-- 					</loginServices> -->
+					<loginServices>
+						<loginService implementation="org.eclipse.jetty.security.HashLoginService">
+							<name>HashLoginRealm</name>
+							<config>${basedir}/src/etc/login-realm.properties</config>
+						</loginService>
+					</loginServices>
 				</configuration>
 				<dependencies>
 					<dependency>
